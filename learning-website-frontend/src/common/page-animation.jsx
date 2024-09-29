@@ -22,5 +22,4 @@ const AnimationWrapper = ({
     </AnimatePresence>
   );
 };
-
 export default AnimationWrapper;
