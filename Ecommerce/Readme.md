@@ -32,13 +32,14 @@ This project is an eco-friendly fashion e-commerce website built with React.js, 
    ```bash
    git clone https://github.com/your-username/ecommerce-website.git
    cd ecommerce-website
-2.Install dependencies:
+   
+-2.Install dependencies:
    npm install
-3.Create an .env file in the root of your project with the following content:
+-3.Create an .env file in the root of your project with the following content:
   MONGO_URI
-4.Run the development server:
+-4.Run the development server:
    npm run dev
-5.Start backend Server:
+-5.Start backend Server:
 cd backend
 npm install
 npm run server
