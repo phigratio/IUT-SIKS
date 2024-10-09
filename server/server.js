@@ -8,6 +8,15 @@ import cors from "cors";
 import admin from "firebase-admin";
 import serviceAccountKey from "./react-js-reviewer-app-firebase-adminsdk-5cort-da9c5350a7.json" assert { type: "json" };
 import { getAuth } from "firebase-admin/auth";
+import { initializeApp } from "firebase/app";
+import {
+  getStorage,
+  ref,
+  getDownloadURL,
+  uploadBytesResumable,
+} from "firebase/storage";
+import multer from "multer";
+import firebaseConfig from "./firebase.config.js";
 
 //schema imports
 import User from "./Schema/User.js";
@@ -19,6 +28,9 @@ let PORT = 3000;
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountKey),
 });
+
+// Initialize Firebase app
+initializeApp(firebaseConfig.firebaseConfig);
 
 let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
 let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // regex for password
@@ -61,6 +73,55 @@ const generateUsername = async (email) => {
 
   return username;
 };
+
+//file upload
+
+const storage = getStorage();
+const upload = multer({ storage: multer.memoryStorage() });
+const giveCurrentDateTime = () => {
+  const today = new Date();
+  const date = `${today.getFullYear()}-${
+    today.getMonth() + 1
+  }-${today.getDate()}`;
+  const time = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+  return `${date} ${time}`;
+};
+
+server.post("/upload", upload.single("filename"), async (req, res) => {
+  try {
+    const dateTime = giveCurrentDateTime();
+
+    const storageRef = ref(
+      storage,
+      `files/${req.file.originalname + " " + dateTime}`
+    );
+
+    // Create file metadata including the content type
+    const metadata = {
+      contentType: req.file.mimetype,
+    };
+
+    // Upload the file to Firebase storage
+    const snapshot = await uploadBytesResumable(
+      storageRef,
+      req.file.buffer,
+      metadata
+    );
+
+    // Get the file's public download URL
+    const downloadURL = await getDownloadURL(snapshot.ref);
+
+    console.log("File successfully uploaded.");
+    return res.send({
+      message: "File uploaded to Firebase Storage",
+      name: req.file.originalname,
+      type: req.file.mimetype,
+      downloadURL: downloadURL,
+    });
+  } catch (error) {
+    return res.status(400).send(error.message);
+  }
+});
 
 server.post("/signup", (req, res) => {
   let { fullname, email, password } = req.body;
@@ -130,12 +191,9 @@ server.post("/signin", (req, res) => {
           }
         });
       } else {
-        return res
-          .status(403)
-          .json({
-            error:
-              "Account was created using google.Try logging in with google",
-          });
+        return res.status(403).json({
+          error: "Account was created using google.Try logging in with google",
+        });
       }
     })
     .catch((err) => {
