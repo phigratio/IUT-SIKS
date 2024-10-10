@@ -3,11 +3,14 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/AuthRoute.js";
 import { connectDB } from "./lib/db.js";
 
+// Load environment variables
 dotenv.config();
+console.log("MONGO_URI:", process.env.MONGO_URI); // Debugging the URI
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Middleware to parse JSON
 app.use(express.json());
 
 // Database connection first
@@ -24,7 +27,4 @@ connectDB()
   });
 
 // Middleware and Routes
-app.use(express.json());
-app.use("/api/auth", authRoutes);
-
-
+app.use("/api/auth", authRoutes); // Auth routes
